@@ -153,10 +153,16 @@ class PullRequest( GithubObject.GithubObject ):
         self._completeIfNotSet( self._user )
         return self._NoneIfNotSet( self._user )
 
-    def create_comment( self, body, commit_id, path, position ):
-        return self.create_review_comment( body, commit_id, path, position )
+    def create_comment( self, *args, **kwds ):
+        return self.create_review_comment( *args, **kwds )
 
-    def create_review_comment( self, body, commit_id, path, position ):
+    def create_review_comment( self, *args, **kwds ):
+        if len( args ) + len( kwds ) == 4:
+            return self.__create_review_comment_1( *args, **kwds )
+        else:
+            return self.__create_review_comment_2( *args, **kwds )
+
+    def __create_review_comment_1( self, body, commit_id, path, position ):
         assert isinstance( body, ( str, unicode ) ), body
         assert isinstance( commit_id, Commit.Commit ), commit_id
         assert isinstance( path, ( str, unicode ) ), path
@@ -166,6 +172,21 @@ class PullRequest( GithubObject.GithubObject ):
             "commit_id": commit_id._identity,
             "path": path,
             "position": position,
+        }
+        headers, data = self._requester.requestAndCheck(
+            "POST",
+            self.url + "/comments",
+            None,
+            post_parameters
+        )
+        return PullRequestComment.PullRequestComment( self._requester, data, completed = True )
+
+    def __create_review_comment_2( self, body, in_reply_to ):
+        assert isinstance( body, ( str, unicode ) ), body
+        assert isinstance( in_reply_to, PullRequestComment.PullRequestComment ), in_reply_to
+        post_parameters = {
+            "body": body,
+            "in_reply_to": in_reply_to.id,
         }
         headers, data = self._requester.requestAndCheck(
             "POST",

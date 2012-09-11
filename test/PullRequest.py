@@ -58,6 +58,12 @@ class PullRequest( Framework.TestCase ):
         comment = self.pull.create_comment( "Comment created by PyGithub", commit, "src/github/Issue.py", 5 )
         self.assertEqual( comment.id, 886298 )
 
+    def testCreateCommentReply( self ):
+        comment = self.pull.get_comment( 1580134 )
+        self.assertEqual( comment.body, "Review comment created for PyGithub" )
+        reply = self.pull.create_comment( "Reply created by PyGithub", comment )
+        self.assertEqual( comment.id, 0 )
+
     def testGetComments( self ):
         self.assertListKeyEqual( self.pull.get_comments(), lambda c: c.id, [ 886298 ] )
 
